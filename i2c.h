@@ -1,6 +1,6 @@
 /*
  * Author: Evan Jones III
- * Initial Commit: 5/1/2025
+ * Initial Commit: 5/1/2022
  * Last Commit: 10/28/2025
  *
  * A simple I2C library for the MSP430Gxxxx family of microcontrollers

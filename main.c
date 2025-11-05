@@ -24,13 +24,18 @@ int main(void)
 
 	// TODO: Init ports
 	i2c_init();
-	adc_single_init(1);
-	unsigned int val = adc_single_read();
+	adc_single_init(4);
+	unsigned int samp_array[3];
+	unsigned int addr = &samp_array[0];
+	while(1){
+	    int err = adc_seq_read(addr,3);
+	}
 	// TODO: Init sensors
+
 
 	// TODO: Init wireless network
 
 	// TODO: Init interrupts and LPM
 
-	return 0;
+	//return 0;
 }

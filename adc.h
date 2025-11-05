@@ -1,7 +1,7 @@
 /*
  * Author: Evan Jones III
  * Initial Commit: 10/29/2025
- * Last Commit: 10/30/2025
+ * Last Commit: 11/4/2025
  *
  * A simple library for using the ADC on the MSP430G2553
  *
@@ -30,7 +30,10 @@
 
 // ADC functions
 int adc_single_init(uint8_t channel);
-unsigned int adc_single_read(void);
+int adc_single_read(void);
+int adc_seq_init(uint8_t channels);
+int adc_seq_read(unsigned int addr, uint8_t num_samps);
+
 
 
 #endif /* ADC_H_ */
