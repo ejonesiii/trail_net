@@ -2,6 +2,7 @@
 Debug/
 targetConfigs/
 .settings/
+.launches/
 # individual files
 .ccsproject
 .cproject

@@ -1,7 +1,7 @@
 /*
  * Author: Evan Jones III
  * Initial Commit: 10/28/2025
- * Last Commit: 10/30/2025
+ * Last Commit: 11/4/2025
  *
  * A wireless sensor network for measuring trail conditions of a nordic ski trail
  * For a detailed explanation, see README.md
@@ -16,11 +16,18 @@
 #include "i2c.h"
 #include "adc.h"
 
+
 int main(void)
 {
 	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
 	
-	// Set up MCLK and SMCLK for a base speed of TBD MHz and ACLK to use the 32 kHz XTAL
+	// Set up MCLK and SMCLK for a base speed of 16 MHz and ACLK to use the 32 kHz XTAL
+	DCOCTL = 0x00;          // Stop clock before changing system
+	BCSCTL3 = LFXT1S_2;     // Set LFXT1 to 32k XTAL TODO: Solder 32k XTAL to board and switch from VLO to 32k
+	BCSCTL2 = 0x00;         // MCLK is set to DCO with no division
+	BCSCTL1 = CALBC1_16MHZ; // Set DCO to 16 MHz
+	DCOCTL = CALDCO_16MHZ;
+
 
 	// TODO: Init ports
 	i2c_init();
