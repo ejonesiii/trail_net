@@ -1,7 +1,7 @@
 /*
  * Author: Evan Jones III
  * Initial Commit: 5/1/2022
- * Last Commit: 10/28/2025
+ * Last Commit: 11/21/2025
  *
  * A simple I2C library for the MSP430Gxxxx family of microcontrollers
  * Theoretically can be ported for other MSP430s
@@ -16,8 +16,8 @@
 #include <i2c.h>
 #include <stdint.h>
 
-volatile unsigned char TX_BUF[];
-volatile unsigned char RX_BUF[];
+volatile unsigned char I2C_TX_BUF[];
+volatile unsigned char I2C_RX_BUF[];
 
 static unsigned int ByteCtr;                // Create a counter
 
@@ -42,7 +42,7 @@ void i2c_tx_single(char addr, char tx_buf){ // Sends a single byte of data
     UCB0I2CSA = addr;                       // Set slave address
 
     IE2 |= UCB0TXIE;                        // Enable interrupts
-    TX_BUF[0] = tx_buf;                     // Load buffer PRIOR to transmission. This seems to matter.
+    I2C_TX_BUF[0] = tx_buf;                     // Load buffer PRIOR to transmission. This seems to matter.
     UCB0CTL1 |= UCTXSTT + UCTR;             // Start transmission
     __enable_interrupt();                   // Enable interrupts
 
@@ -61,8 +61,8 @@ void i2c_tx_double(char addr, char tx_buf0, char tx_buf1){  // Sends two bytes o
     UCB0I2CSA = addr;                       // Set slave address
 
     IE2 |= UCB0TXIE;                        // Enable interrupts
-    TX_BUF[0] = tx_buf0;                    // Load buffer PRIOR to transmission. This seems to matter.
-    TX_BUF[1] = tx_buf1;                    // Load second byte cause why not, its midnight anyhow
+    I2C_TX_BUF[0] = tx_buf0;                    // Load buffer PRIOR to transmission. This seems to matter.
+    I2C_TX_BUF[1] = tx_buf1;                    // Load second byte cause why not, its midnight anyhow
     UCB0CTL1 |= UCTXSTT + UCTR;             // Start transmission
     __enable_interrupt();                   // Enable interrupts
 
@@ -81,10 +81,10 @@ void i2c_tx_mult(char addr, volatile unsigned char tx_buf[], uint8_t elmt){ // S
     UCB0I2CSA = addr;
 
     IE2 |= UCB0TXIE;                        // Enable interrupts
-    TX_BUF[0] = tx_buf[0];                  // Pre-load the first byte before starting transmission. This seems to matter
+    I2C_TX_BUF[0] = tx_buf[0];                  // Pre-load the first byte before starting transmission. This seems to matter
     UCB0CTL1 |= UCTXSTT + UCTR;             // Start transmission
     for(i=1; i <= elmt; i++){
-        TX_BUF[i] = tx_buf[i];              // Load the buffer
+        I2C_TX_BUF[i] = tx_buf[i];              // Load the buffer
     }
 
     __enable_interrupt();                   // Enable interrupts
@@ -111,7 +111,7 @@ char i2c_rx_single(char addr){
     while((ByteCtr < 1) && (WDT <= 1000)){  // Wait until transmission finishes or times out
         WDT++;
     }
-    return RX_BUF[0];
+    return I2C_RX_BUF[0];
 }
 
 
@@ -135,7 +135,7 @@ unsigned char * i2c_rx_mult(char addr, uint8_t elmt){
     }
     UCB0CTL1 |= UCTXSTP;                    // Stop transmission
     for(WDT = 0; WDT <= elmt; WDT++){
-        ret[WDT] = RX_BUF[WDT];
+        ret[WDT] = I2C_RX_BUF[WDT];
     }
     return ret;
 }
@@ -147,7 +147,7 @@ char i2c_tx_rx_single(char addr, char tx_buf){  // Sends a single byte of data t
     UCB0I2CSA = addr;                       // Set slave address
 
     IE2 |= UCB0TXIE;                        // Enable interrupts
-    TX_BUF[0] = tx_buf;                     // Load buffer PRIOR to transmission. This seems to matter.
+    I2C_TX_BUF[0] = tx_buf;                     // Load buffer PRIOR to transmission. This seems to matter.
     UCB0CTL1 |= UCTXSTT + UCTR;             // Start transmission
     __enable_interrupt();                   // Enable interrupts
 
@@ -169,17 +169,17 @@ char i2c_tx_rx_single(char addr, char tx_buf){  // Sends a single byte of data t
     while((ByteCtr < 1) && (WDT <= 1000)){  // Wait until transmission finishes or times out
         WDT++;
     }
-    return RX_BUF[0];
+    return I2C_RX_BUF[0];
 }
 
 #pragma vector = USCIAB0TX_VECTOR           // Transmit interrupts
 __interrupt void USCIAB0TX_ISR (void){
     if(UCB0CTL1 & UCTR){
-        UCB0TXBUF = TX_BUF[ByteCtr];        // Add byte to TX buffer and increment counter
+        UCB0TXBUF = I2C_TX_BUF[ByteCtr];        // Add byte to TX buffer and increment counter
         ByteCtr++;
     }
     else{
-        RX_BUF[ByteCtr] = UCB0RXBUF;        // Add byte to RX buffer and decrement counter
+        I2C_RX_BUF[ByteCtr] = UCB0RXBUF;        // Add byte to RX buffer and decrement counter
         ByteCtr++;
     }
     __bic_SR_register_on_exit(CPUOFF);      // Exit LPM0

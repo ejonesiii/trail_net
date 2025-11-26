@@ -13,8 +13,8 @@
  */
 
 #include <msp430g2553.h>
-#include "i2c.h"
 #include "adc.h"
+#include "usci.h"
 
 
 int main(void)
@@ -30,13 +30,10 @@ int main(void)
 
 
 	// TODO: Init ports
-	i2c_init();
 	adc_single_init(4);
 	unsigned int samp_array[3];
 	unsigned int addr = &samp_array[0];
-	while(1){
-	    int err = adc_seq_read(addr,3);
-	}
+	spi_init();
 	// TODO: Init sensors
 
 
