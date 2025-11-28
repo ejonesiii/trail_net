@@ -1,7 +1,7 @@
 /*
  * Author: Evan Jones III
  * Initial Commit: 10/28/2025
- * Last Commit: 11/4/2025
+ * Last Commit: 11/26/2025
  *
  * A wireless sensor network for measuring trail conditions of a nordic ski trail
  * For a detailed explanation, see README.md
@@ -31,15 +31,17 @@ int main(void)
 
 	// TODO: Init ports
 	adc_single_init(4);
-	unsigned int samp_array[3];
-	unsigned int addr = &samp_array[0];
-	spi_init();
+	char samp_array[5] = {0x43,0x22,0x44,0x19,0xFF};
+	__enable_interrupt();
 	// TODO: Init sensors
 
 
 	// TODO: Init wireless network
-
+    B0_spi_init();             // Init SPI peripheral
+    while(1){
+    B0_spi_transmit(0x07,&samp_array[0],5);           // Read nRF24 status to check for operation
+    }
 	// TODO: Init interrupts and LPM
-
-	//return 0;
+    __no_operation();
+	return 0;
 }
