@@ -274,14 +274,14 @@ void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIAB0RX_ISR (void)
         switch(uscia0){
         case SPI_RX:                        // SPI rx mode
             if(A0RxByteCtr == 0){          // Last byte remaining; switch to idle after transmitting last byte
-                UCA0TXBUF = A0_RX_BUF[A0RxByteCtr];
+                A0_RX_BUF[A0RxByteCtr] = UCA0RXBUF;
                 uscia0 = IDLE;
                 IE2 &= ~UCA0RXIE;           // Disable tx interrupts
                 IFG2 &= ~UCA0RXIFG;         // Resets tx flag
                 LPM0_EXIT;                  // Exit LPM0
             }
             else{
-                UCA0RXBUF = A0_RX_BUF[A0RxByteCtr];      // Add byte to TX buffer and increment counter
+                A0_RX_BUF[A0RxByteCtr] = UCA0RXBUF;      // Add byte to TX buffer and increment counter
                 A0RxByteCtr--;
                 IFG2 &= ~UCA0RXIFG;         // Resets TX flag
             }
@@ -293,5 +293,29 @@ void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIAB0RX_ISR (void)
             break;
         }
 
+    }
+
+    if(IFG2 & UCB0RXIFG){
+        switch(uscib0){
+        case SPI_RX:
+            if(A0RxByteCtr == 0){          // Last byte remaining; switch to idle after transmitting last byte
+                B0_RX_BUF[B0RxByteCtr] = UCB0TXBUF;
+                uscib0 = IDLE;
+                IE2 &= ~UCB0RXIE;           // Disable tx interrupts
+                IFG2 &= ~UCB0RXIFG;         // Resets tx flag
+                LPM0_EXIT;                  // Exit LPM0
+            }
+            else{
+                B0_RX_BUF[B0RxByteCtr] = UCB0TXBUF;      // Add byte to TX buffer and increment counter
+                B0RxByteCtr--;
+                IFG2 &= ~UCB0RXIFG;         // Resets TX flag
+            }
+            break;
+
+        case I2C_RX:                        // TODO I2C
+
+            break;
+
+        }
     }
 }
