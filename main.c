@@ -31,19 +31,21 @@ int main(void)
 
 	// TODO: Init ports
 	adc_single_init(4);
-	//TODO TODO TODO SET PIN HIGH TO ENABLE nRF24
-	char samp_array[5] = {0x43,0x22,0x44,0x19,0xFF};
-	__enable_interrupt();
+	P2DIR = BIT3;           // Enables the nRF24
+	P2OUT = BIT3;
+	//char samp_array[5] = {0x43,0x22,0x44,0x19,0xFF};
+	char samp_array[5] = {0};
 	// TODO: Init sensors
 
 
 	// TODO: Init wireless network
     B0_spi_init();             // Init SPI peripheral
     while(1){
-        __delay_cycles(10000);
+        //__delay_cycles(10000);
+        __no_operation();
         B0_spi_receive(0x07,&samp_array[0],1);           // Read nRF24 status to check for operation
     }
 	// TODO: Init interrupts and LPM
     //__no_operation();
-	return 0;
+	//return 0;
 }

@@ -123,12 +123,14 @@ int B0_spi_init(){
     UCB0CTL1 = UCSWRST;                     // Reset before configuration
     uscib0 = IDLE;                          // Default to IDLE as to prevent transmissions of old data until ready
     //P1REN = BIT7 + BIT6 + BIT4 + BIT5;
-    UCB0CTL0 |= UCSYNC + UCMST + UCMODE_2 + UCCKPH; //Synchronous mode (Required), master mode, 4 wire mode with nCS, data captured on first clock edge
+    UCB0CTL0 |= UCSYNC + UCMST + UCMODE_0 + UCCKPH; //Synchronous mode (Required), master mode, 3 wire mode, data captured on first clock edge
     UCB0CTL1 |= UCSSEL_3;                   // SMCLK
     UCB0BR0 = 16;                           // Divide SPI clock by 16 times
     UCB0BR1 = 0;
-    P1SEL |= BIT7 + BIT6 + BIT4 + BIT5;     // Enable MISO, MOSI, SCLK, and CS
-    P1SEL2 |= BIT7 + BIT6 + BIT4 + BIT5;    // Enable MISO, MOSI, SCLK, and CS
+    P1SEL |= BIT7 + BIT6 + BIT4;            // Enable MISO, MOSI, and SCLK
+    P1SEL2 |= BIT7 + BIT6 + BIT4;           // Enable MISO, MOSI, and SCLK
+    P1DIR |= BIT5;                          // Set CS to output direction
+    P1OUT |= BIT5;                          // Set CS to High in order to disable slave device
     UCB0CTL1 &= ~UCSWRST;                   // Enable USCI by removing reset bit
     return 0;
 }
@@ -171,12 +173,14 @@ int B0_spi_receive(char reg, char *data, char length){
         return -1;                          // Error if trying to send array larger than max buffer size
     }
     else{
-        B0RxByteCtr = length-1;             // Set counter for expected bytes to be received
-        //while (!(IFG2 & UCB0TXIFG));        // Wait until TX buffer ready
-        UCB0TXBUF = reg;                    // Transmit register byte
-        IE2 |= UCB0RXIE;                    // Enable rx interrupt
         uscib0 = SPI_RX;                    // Set state machine to SPI_RX mode
+        B0RxByteCtr = length-1;             // Set counter for expected bytes to be received
+        while(!(IFG2 & UCB0TXIFG));         // Wait until TX buffer ready
+        __enable_interrupt();               // Enable global interrupts
+        IE2 |= UCB0RXIE;                    // Enable rx interrupt
+        UCB0TXBUF = reg;                    // Transmit register byte
         LPM0;                               // Enter low power mode until reception is complete
+        while(!(B0RxByteCtr==0));           // Wait until bytes are received
         char i;
         for(i=0;i<length;i++){              // RX buf will be backwards from expected, so data is transferred in reverse indexing
             *(data+(length-1)-i) = B0_RX_BUF[i];
@@ -298,7 +302,7 @@ void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIAB0RX_ISR (void)
     if(IFG2 & UCB0RXIFG){
         switch(uscib0){
         case SPI_RX:
-            if(A0RxByteCtr == 0){          // Last byte remaining; switch to idle after transmitting last byte
+            if(B0RxByteCtr == 0){           // Last byte remaining; switch to idle after transmitting last byte
                 B0_RX_BUF[B0RxByteCtr] = UCB0TXBUF;
                 uscib0 = IDLE;
                 IE2 &= ~UCB0RXIE;           // Disable tx interrupts
