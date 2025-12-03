@@ -15,7 +15,7 @@
 #include <msp430g2553.h>
 #include "adc.h"
 #include "usci.h"
-
+#include "sensors.h"
 
 int main(void)
 {
@@ -43,7 +43,7 @@ int main(void)
     while(1){
         //__delay_cycles(10000);
         __no_operation();
-        B0_spi_receive(0x07,&samp_array[0],1);           // Read nRF24 status to check for operation
+        B0_spi_receive(0x06,&samp_array[0],2);           // Read nRF24 status to check for operation
     }
 	// TODO: Init interrupts and LPM
     //__no_operation();

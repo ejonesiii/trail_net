@@ -24,6 +24,7 @@ typedef enum USCI_ModeEnum{
     IDLE,
     SPI_TX,
     SPI_RX,
+    SPI_TRX,
     I2C_TX,
     I2C_RX,
     UART_TX,
@@ -77,10 +78,10 @@ int A0_spi_transmit(char reg, char *data, char length){
     }
     else{
         char i;
-        for(i=0; i<length; i++){       // Create a sort of FIFO buffer where the first byte out is the highest index in the array
+        for(i=0; i<length; i++){            // Create a sort of FIFO buffer where the first byte out is the highest index in the array
             A0_TX_BUF[i] = *(data+(length-1)-i);
         }
-        A0TxByteCtr = length - 1;          // Set counter for bytes remaining to be transmitted
+        A0TxByteCtr = length - 1;           // Set counter for bytes remaining to be transmitted
         UCA0TXBUF = reg;                    // Transmit register
         IE2 |= UCA0TXIE;                    // Enable tx interrupt
         uscia0 = SPI_TX;                    // Set state machine to SPI_TX mode
@@ -101,7 +102,7 @@ int A0_spi_receive(char reg, char *data, char length){
         return -1;                          // Error if trying to send array larger than max buffer size
     }
     else{
-        A0RxByteCtr = length-1;            // Set counter for expected bytes to be received
+        A0RxByteCtr = length-1;             // Set counter for expected bytes to be received
         UCA0TXBUF = reg;                    // Transmit register byte
         IE2 |= UCA0RXIE;                    // Enable rx interrupt
         uscia0 = SPI_RX;                    // Set state machine to SPI_RX mode
@@ -123,7 +124,7 @@ int B0_spi_init(){
     UCB0CTL1 = UCSWRST;                     // Reset before configuration
     uscib0 = IDLE;                          // Default to IDLE as to prevent transmissions of old data until ready
     //P1REN = BIT7 + BIT6 + BIT4 + BIT5;
-    UCB0CTL0 |= UCSYNC + UCMST + UCMODE_0 + UCCKPH; //Synchronous mode (Required), master mode, 3 wire mode, data captured on first clock edge
+    UCB0CTL0 |= UCSYNC + UCMST + UCMODE_0 + UCCKPH + UCMSB; //Synchronous mode (Required), master mode, 3 wire mode, data captured on first clock edge, and most sig bit first
     UCB0CTL1 |= UCSSEL_3;                   // SMCLK
     UCB0BR0 = 16;                           // Divide SPI clock by 16 times
     UCB0BR1 = 0;
@@ -166,7 +167,7 @@ int B0_spi_transmit(char reg, char *data, char length){
  *
  * reg is the register the data will be written to and is the first byte transmitted
  * data is the address of the first byte of the receive array
- * length is the number of bytes to be transmitted. If only sending a char and not a char array, set length = 1
+ * length is the number of bytes to be received. If only expecting a char and not a char array, set length = 1
  */
 int B0_spi_receive(char reg, char *data, char length){
     if(length > MAX_BUF_SIZE){
@@ -180,7 +181,7 @@ int B0_spi_receive(char reg, char *data, char length){
         IE2 |= UCB0RXIE;                    // Enable rx interrupt
         UCB0TXBUF = reg;                    // Transmit register byte
         LPM0;                               // Enter low power mode until reception is complete
-        while(!(B0RxByteCtr==0));           // Wait until bytes are received
+        //while(!(B0RxByteCtr==0));           // Wait until bytes are received
         char i;
         for(i=0;i<length;i++){              // RX buf will be backwards from expected, so data is transferred in reverse indexing
             *(data+(length-1)-i) = B0_RX_BUF[i];
@@ -189,7 +190,19 @@ int B0_spi_receive(char reg, char *data, char length){
     return 0;
 }
 
+/*
+ * Transmit and receive an arbitrary amount of data over the SPI bus
+ *
+ * reg is the register the data will be written to and is the first byte transmitted
+ * tx_data is the address of the first byte of the receive array
+ * tx_length is the number of bytes to be transmitted. If only sending a char and not a char array, set length = 1
+ * rx_data is the address of the first byte of the receive array
+ * rx_length is the number of bytes to be received. If only expecting a char and not a char array, set length = 1
+ */
+int B0_spi_trx(char reg, char *tx_data, char tx_length, char *rx_data, char rx_length){
 
+    return 0;
+}
 
 /*
  * I2C Functions TODO
@@ -303,14 +316,14 @@ void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIAB0RX_ISR (void)
         switch(uscib0){
         case SPI_RX:
             if(B0RxByteCtr == 0){           // Last byte remaining; switch to idle after transmitting last byte
-                B0_RX_BUF[B0RxByteCtr] = UCB0TXBUF;
+                B0_RX_BUF[B0RxByteCtr] = UCB0RXBUF;
                 uscib0 = IDLE;
                 IE2 &= ~UCB0RXIE;           // Disable tx interrupts
                 IFG2 &= ~UCB0RXIFG;         // Resets tx flag
                 LPM0_EXIT;                  // Exit LPM0
             }
             else{
-                B0_RX_BUF[B0RxByteCtr] = UCB0TXBUF;      // Add byte to TX buffer and increment counter
+                B0_RX_BUF[B0RxByteCtr] = UCB0RXBUF;      // Add byte to TX buffer and increment counter
                 B0RxByteCtr--;
                 IFG2 &= ~UCB0RXIFG;         // Resets TX flag
             }

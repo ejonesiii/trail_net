@@ -27,6 +27,7 @@
 #define ADC5 INCH_5
 #define ADC6 INCH_6
 #define ADC7 INCH_7
+#define TEMP_SEN INCH_10
 
 // ADC functions
 int adc_single_init(uint8_t channel);
