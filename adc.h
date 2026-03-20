@@ -19,15 +19,15 @@
 #define ADC_H_
 
 // ADC Channels to enable
-#define ADC0 INCH_0
-#define ADC1 INCH_1
-#define ADC2 INCH_2
-#define ADC3 INCH_3
-#define ADC4 INCH_4
-#define ADC5 INCH_5
-#define ADC6 INCH_6
-#define ADC7 INCH_7
-#define TEMP_SEN INCH_10
+#define ADC0 0
+#define ADC1 1
+#define ADC2 2
+#define ADC3 3
+#define ADC4 4
+#define ADC5 5
+#define ADC6 6
+#define ADC7 7
+#define TEMP_SEN 10
 
 // ADC functions
 int adc_single_init(uint8_t channel);

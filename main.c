@@ -34,16 +34,20 @@ int main(void)
 	P2DIR = BIT3;           // Enables the nRF24
 	P2OUT = BIT3;
 	//char samp_array[5] = {0x43,0x22,0x44,0x19,0xFF};
-	char samp_array[5] = {0};
+	char rx_array[5] = {0};
+	char tx_array[6] = {0};
 	// TODO: Init sensors
-
+	int moist, temp, depth;
 
 	// TODO: Init wireless network
     B0_spi_init();             // Init SPI peripheral
     while(1){
         //__delay_cycles(10000);
+        moist = moisture();
+        temp = temperature();
+        depth = distance();
         __no_operation();
-        B0_spi_receive(0x06,&samp_array[0],2);           // Read nRF24 status to check for operation
+        B0_spi_receive(0x06,&rx_array[0],2);           // Read nRF24 status to check for operation
     }
 	// TODO: Init interrupts and LPM
     //__no_operation();

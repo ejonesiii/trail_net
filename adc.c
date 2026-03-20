@@ -16,7 +16,7 @@
 #include <stdint.h>
 
 // ADC single sample/read functions
-int adc_single_init(int channel){
+int adc_single_init(uint8_t channel){
     // Reset ADC to prevent misconfiguration
     ADC10CTL0 = 0x0000;         // Must be done before other registers as ENC being set to 1 would prevent configuration
     ADC10CTL1 = 0x0000;
@@ -81,7 +81,7 @@ int adc_single_read(void){
 
 
 // TODO: ADC Sequence Functions
-int adc_seq_init(int channels){
+int adc_seq_init(uint8_t channels){
     // Reset ADC to prevent misconfiguration
     ADC10CTL0 = 0x0000;         // Must be done before other registers as ENC being set to 1 would prevent configuration
     ADC10CTL1 = 0x0000;
